@@ -25,7 +25,7 @@ RECORD_SHEET_ID = "1vD-vEszbCPVeVKjKEd0VGBvLak4a12gbiowNvnB0Ik8"
 
 # === 連接 Google Sheets ===
 try:
-    sheet_food = gc.open_by_key(FOOD_SHEET_ID).worksheet("食物資料")
+    sheet_food = gc.open_by_key(FOOD_SHEET_ID).worksheet("111")
     st.success("✅ 已連接食物資料")
 except Exception as e:
     st.error("❌ 無法連接食物資料")
@@ -33,8 +33,8 @@ except Exception as e:
     st.stop()
 
 try:
-    sheet_food_records = gc.open_by_key(RECORD_SHEET_ID).worksheet("食物記錄")
-    sheet_insulin = gc.open_by_key(RECORD_SHEET_ID).worksheet("血糖與胰島素紀錄表")
+    sheet_food_records = gc.open_by_key(RECORD_SHEET_ID).worksheet("222")
+    sheet_insulin = gc.open_by_key(RECORD_SHEET_ID).worksheet("333")
     st.success("✅ 已連接紀錄表格")
 except Exception as e:
     st.error("❌ 無法連接紀錄工作表")
