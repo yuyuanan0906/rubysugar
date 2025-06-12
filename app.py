@@ -20,8 +20,8 @@ except Exception as e:
     st.stop()
 
 # === 設定 Sheet ID ===
-FOOD_SHEET_ID = "你的食物資料表 ID"
-RECORD_SHEET_ID = "你的紀錄資料表 ID"
+FOOD_SHEET_ID = "1vIL-n9ARfJy7GkBc7EWC3XDizgJU6e3BYes7N6AJWU0"
+RECORD_SHEET_ID = "1vD-vEszbCPVeVKjKEd0VGBvLak4a12gbiowNvnB0Ik8"
 
 # === 連接 Google Sheets ===
 try:
