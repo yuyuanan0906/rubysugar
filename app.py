@@ -7,6 +7,8 @@ import gspread
 from datetime import datetime
 from oauth2client.service_account import ServiceAccountCredentials
 
+st.set_page_config(page_title="食物碳水與胰島素系統", layout="wide")  # 👈 搬到這裡
+
 # === 初始化 Google Sheets 連線 ===
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 credentials = ServiceAccountCredentials.from_json_keyfile_dict(
@@ -33,7 +35,7 @@ except Exception as e:
     st.error("❌ 無法存取 RECORD_SHEET 工作表")
     st.exception(e)
 
-st.set_page_config(page_title="食物碳水與胰島素系統", layout="wide")
+
 
 # === Session State 初始化 ===
 if "calc_results" not in st.session_state:
