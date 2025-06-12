@@ -20,12 +20,18 @@ RECORD_SHEET_ID = "1vD-vEszbCPVeVKjKEd0VGBvLak4a12gbiowNvnB0Ik8"
 
 try:
     sheet_food = gc.open_by_key(FOOD_SHEET_ID).worksheet("食物資料")
-    st.success("✅ 成功連接食物資料表")
+    st.success("✅ 成功連接 食物資料 表")
 except Exception as e:
-    st.error("❌ 無法存取食物資料表，可能是權限或 ID 錯誤")
+    st.error("❌ 無法存取 食物資料 表")
     st.exception(e)
-sheet_food_records = gc.open_by_key(RECORD_SHEET_ID).worksheet("食物記錄")
-sheet_insulin = gc.open_by_key(RECORD_SHEET_ID).worksheet("血糖與胰島素紀錄表")
+
+try:
+    sheet_food_records = gc.open_by_key(RECORD_SHEET_ID).worksheet("食物記錄")
+    sheet_insulin = gc.open_by_key(RECORD_SHEET_ID).worksheet("血糖與胰島素紀錄表")
+    st.success("✅ 成功連接 RECORD_SHEET 工作表")
+except Exception as e:
+    st.error("❌ 無法存取 RECORD_SHEET 工作表")
+    st.exception(e)
 
 st.set_page_config(page_title="食物碳水與胰島素系統", layout="wide")
 
