@@ -23,9 +23,18 @@ except Exception as e:
     st.stop()  # 停止整個 app，避免後續出錯
 
 # === Google Sheets 連結設定 ===
-FOOD_SHEET_ID = "1vIL-n9ARfJy7GkBc7EWC3XDizgJU6e3BYes7N6AJWU0"
-RECORD_SHEET_ID = "1vD-vEszbCPVeVKjKEd0VGBvLak4a12gbiowNvnB0Ik8"
+FOOD_SHEET_ID = "1vIL-n9ARfJy7GkBc7EWC3XDizgJU6e3BYes7N6AJWU0/edit"
+RECORD_SHEET_ID = "1vD-vEszbCPVeVKjKEd0VGBvLak4a12gbiowNvnB0Ik8/edit"
 
+try:
+    test_sheet = gc.open_by_key(FOOD_SHEET_ID)
+    st.success("✅ 已成功連接試算表檔案")
+    worksheet_names = [ws.title for ws in test_sheet.worksheets()]
+    st.write("🔍 可存取的工作表名稱：", worksheet_names)
+except Exception as e:
+    st.error("❌ Service Account 無法開啟試算表")
+    st.exception(e)
+    
 # === 嘗試連接個別工作表 ===
 try:
     sheet_food = gc.open_by_key(FOOD_SHEET_ID).worksheet("食物資料")
