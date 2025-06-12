@@ -23,8 +23,8 @@ except Exception as e:
     st.stop()  # 停止整個 app，避免後續出錯
 
 # === Google Sheets 連結設定 ===
-FOOD_SHEET_ID = "1vIL-n9ARfJy7GkBc7EWC3XDizgJU6e3BYes7N6AJWU0/edit"
-RECORD_SHEET_ID = "1vD-vEszbCPVeVKjKEd0VGBvLak4a12gbiowNvnB0Ik8/edit"
+FOOD_SHEET_ID = "1vIL-n9ARfJy7GkBc7EWC3XDizgJU6e3BYes7N6AJWU0"
+RECORD_SHEET_ID = "1vD-vEszbCPVeVKjKEd0VGBvLak4a12gbiowNvnB0Ik8"
 
 try:
     test_sheet = gc.open_by_key(FOOD_SHEET_ID)
