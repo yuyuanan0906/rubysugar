@@ -10,29 +10,42 @@ from oauth2client.service_account import ServiceAccountCredentials
 st.set_page_config(page_title="食物碳水與胰島素系統", layout="wide")  # 👈 搬到這裡
 
 # === 初始化 Google Sheets 連線 ===
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-credentials = ServiceAccountCredentials.from_json_keyfile_dict(
-    st.secrets["gcp_service_account"], scope
-)
-gc = gspread.authorize(credentials)
+try:
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    credentials = ServiceAccountCredentials.from_json_keyfile_dict(
+        st.secrets["gcp_service_account"], scope
+    )
+    gc = gspread.authorize(credentials)
+    st.success("✅ 成功授權 Google Sheets API")
+except Exception as e:
+    st.error("❌ Google Sheets API 憑證初始化失敗")
+    st.exception(e)
+    st.stop()  # 停止整個 app，避免後續出錯
 
-# === Google Sheets 連結 ===
+# === Google Sheets 連結設定 ===
 FOOD_SHEET_ID = "1vIL-n9ARfJy7GkBc7EWC3XDizgJU6e3BYes7N6AJWU0"
 RECORD_SHEET_ID = "1vD-vEszbCPVeVKjKEd0VGBvLak4a12gbiowNvnB0Ik8"
 
+# === 嘗試連接個別工作表 ===
 try:
     sheet_food = gc.open_by_key(FOOD_SHEET_ID).worksheet("食物資料")
-    st.success("✅ 成功連接 食物資料 表")
+    st.success("✅ 成功連接：食物資料 表")
 except Exception as e:
-    st.error("❌ 無法存取 食物資料 表")
+    st.error("❌ 錯誤：無法讀取 食物資料 表")
     st.exception(e)
 
 try:
     sheet_food_records = gc.open_by_key(RECORD_SHEET_ID).worksheet("食物記錄")
-    sheet_insulin = gc.open_by_key(RECORD_SHEET_ID).worksheet("血糖與胰島素紀錄表")
-    st.success("✅ 成功連接 RECORD_SHEET 工作表")
+    st.success("✅ 成功連接：食物記錄 表")
 except Exception as e:
-    st.error("❌ 無法存取 RECORD_SHEET 工作表")
+    st.error("❌ 錯誤：無法讀取 食物記錄 表")
+    st.exception(e)
+
+try:
+    sheet_insulin = gc.open_by_key(RECORD_SHEET_ID).worksheet("血糖與胰島素紀錄表")
+    st.success("✅ 成功連接：血糖與胰島素紀錄表")
+except Exception as e:
+    st.error("❌ 錯誤：無法讀取 血糖與胰島素紀錄表")
     st.exception(e)
 
 
