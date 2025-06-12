@@ -15,8 +15,8 @@ credentials = ServiceAccountCredentials.from_json_keyfile_dict(
 gc = gspread.authorize(credentials)
 
 # === Google Sheets 連結 ===
-FOOD_SHEET_ID = "1qbVydlCFC64cY5yhWq9e9SkLBeEcU8voTYqlaBqroOg"
-RECORD_SHEET_ID = "1wH6GQIZOG9X_umiLFBFKKBNW7oiCVGEDiF6Vrar4osk"
+FOOD_SHEET_ID = "1vIL-n9ARfJy7GkBc7EWC3XDizgJU6e3BYes7N6AJWU0"
+RECORD_SHEET_ID = "1vD-vEszbCPVeVKjKEd0VGBvLak4a12gbiowNvnB0Ik8"
 
 sheet_food = gc.open_by_key(FOOD_SHEET_ID).worksheet("食物資料")
 sheet_food_records = gc.open_by_key(RECORD_SHEET_ID).worksheet("食物記錄")
