@@ -24,6 +24,9 @@ FOOD_SHEET_ID = "1vIL-n9ARfJy7GkBc7EWC3XDizgJU6e3BYes7N6AJWU0"
 RECORD_SHEET_ID = "1vD-vEszbCPVeVKjKEd0VGBvLak4a12gbiowNvnB0Ik8"
 
 # === 連接 Google Sheets ===
+
+sheet = gc.open_by_key(FOOD_SHEET_ID)
+st.write("可用工作表名稱：", [ws.title for ws in sheet.worksheets()])
 try:
     sheet_food = gc.open_by_key(FOOD_SHEET_ID).worksheet("食物資料")
     st.success("✅ 已連接食物資料")
