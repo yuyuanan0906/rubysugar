@@ -18,7 +18,12 @@ gc = gspread.authorize(credentials)
 FOOD_SHEET_ID = "1vD-vEszbCPVeVKjKEd0VGBvLak4a12gbiowNvnB0Ik8"
 RECORD_SHEET_ID = "1vIL-n9ARfJy7GkBc7EWC3XDizgJU6e3BYes7N6AJWU0"
 
-sheet_food = gc.open_by_key(FOOD_SHEET_ID).worksheet("食物資料")
+try:
+    sheet_food = gc.open_by_key(FOOD_SHEET_ID).worksheet("食物資料")
+    st.success("✅ 成功連接食物資料表")
+except Exception as e:
+    st.error("❌ 無法存取食物資料表，可能是權限或 ID 錯誤")
+    st.exception(e)
 sheet_food_records = gc.open_by_key(RECORD_SHEET_ID).worksheet("食物記錄")
 sheet_insulin = gc.open_by_key(RECORD_SHEET_ID).worksheet("血糖與胰島素紀錄表")
 
