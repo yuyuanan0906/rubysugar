@@ -151,31 +151,34 @@ with tabs[2]:
                 str(date), meal, item["name"], item["amount"], item["unit"], item["carb"]
             ])
 
+        # 整列資料
         new_data = [
-            str(date), meal, str(total_carb), str(current), str(target), str(actual_glucose),
-            str(ci), str(isf), str(insulin_carb), str(insulin_corr), str(total), str(suggest_ci_val)
+            str(date), meal, str(total_carb), str(current), str(target),
+            str(actual_glucose), str(ci), str(isf),
+            str(insulin_carb), str(insulin_corr), str(total), str(suggest_ci_val)
         ]
+        
+        # 讀出現有表格資料
         records = sheet_insulin.get_all_values()
-        headers = records[0]
         data_rows = records[1:]
+        
         updated = False
-
         for idx, row in enumerate(data_rows, start=2):
             if row[0] == str(date) and row[1] == meal:
                 updated_row = []
-                for i in range(len(headers)):
-                    if new_data[i] not in [None, "", "0", "0.0"]:
+                for i in range(len(new_data)):
+                    if new_data[i] not in ["", "0", "0.0"]:
                         updated_row.append(new_data[i])
                     else:
                         updated_row.append(row[i] if i < len(row) else "")
                 sheet_insulin.update(f"A{idx}:L{idx}", [updated_row])
-                st.success(f"✅ 更新成功：{str(date)} {meal}")
+                st.success(f"✅ 更新成功：{date} {meal}")
                 updated = True
                 break
-
+        
         if not updated:
             sheet_insulin.append_row(new_data)
-            st.success(f"✅ 新增成功：{str(date)} {meal}")
+            st.success(f"✅ 新增成功：{date} {meal}")
 
         st.session_state.calc_results.clear()
 
