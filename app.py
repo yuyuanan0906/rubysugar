@@ -144,8 +144,12 @@ with tabs[2]:
         # 計算建議 C/I 值
         if actual_glucose > 0:
             try:
-                suggest_ci_val = round(total_carb / (total - ((actual_glucose - target) / isf)), 2)
-                st.info(f"🔍 建議 C/I 值：{suggest_ci_val}")
+                insulin_for_carb = total - ((actual_glucose - target) / isf)
+                if insulin_for_carb > 0:
+                    suggest_ci_val = round(total_carb / insulin_for_carb, 2)
+                    st.info(f"🔍 建議 C/I 值：{suggest_ci_val}")
+                else:
+                    st.warning("⚠️ 計算結果異常，請檢查 ISF 與總胰島素量")
             except ZeroDivisionError:
                 st.warning("⚠️ ISF 值為 0，無法計算建議 C/I 值")
 
