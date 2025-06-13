@@ -12,28 +12,26 @@ try:
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
     ]
-    # 建立授權憑證物件
     credentials = ServiceAccountCredentials.from_json_keyfile_dict(
         st.secrets["gcp_service_account"], scopes=scope
     )
     gc = gspread.authorize(credentials)
     st.success("✅ 成功授權 Google Sheets API")
 except KeyError:
-    st.error("❌ 缺少 Google Sheets 憑證，請確認 .streamlit/secrets.toml 已設定")
+    st.error("❌ 缺少憑證，請設定 .streamlit/secrets.toml")
     st.stop()
 except Exception as e:
-    st.error("❌ 無法授權 Google Sheets API")
+    st.error("❌ 授權失敗")
     st.exception(e)
     st.stop()
 
-# === 設定 Sheet ID ===
+# === 試算表 ID ===
 FOOD_SHEET_ID = "1vIL-n9ARfJy7GkBc7EWC3XDizgJU6e3BYes7N6AJWU0"
 RECORD_SHEET_ID = "1vD-vEszbCPVeVKjKEd0VGBvLak4a12gbiowNvnB0Ik8"
 
-# === 連接 Google Sheets ===
+# === 連接試算表 ===
 try:
-    food_spreadsheet = gc.open_by_key(FOOD_SHEET_ID)
-    sheet_food = food_spreadsheet.worksheet("食物資料")
+    sheet_food = gc.open_by_key(FOOD_SHEET_ID).worksheet("食物資料")
     st.success("✅ 已連接食物資料")
 except Exception as e:
     st.error("❌ 無法連接食物資料")
@@ -41,26 +39,23 @@ except Exception as e:
     st.stop()
 
 try:
-    record_spreadsheet = gc.open_by_key(RECORD_SHEET_ID)
-    sheet_food_records = record_spreadsheet.worksheet("食物記錄")
-    sheet_insulin = record_spreadsheet.worksheet("血糖與胰島素紀錄")
+    sheet_food_records = gc.open_by_key(RECORD_SHEET_ID).worksheet("食物記錄")
+    sheet_insulin = gc.open_by_key(RECORD_SHEET_ID).worksheet("血糖與胰島素紀錄")
     st.success("✅ 已連接紀錄表格")
 except Exception as e:
     st.error("❌ 無法連接紀錄工作表")
     st.exception(e)
     st.stop()
-    
-# === Session state ===
+
 if "calc_results" not in st.session_state:
     st.session_state.calc_results = []
 
-# === 分頁介面 ===
 tabs = st.tabs(["🍱 食物管理", "📊 碳水計算", "💉 胰島素紀錄"])
 
 # === 食物管理 ===
 with tabs[0]:
     st.header("🍱 食物管理")
-    with st.form("add_food_form"):
+    with st.form("add_food"):
         name = st.text_input("食物名稱")
         unit = st.selectbox("單位", ["克(g)", "毫升(ml)"])
         carb = st.text_input("每單位碳水 (g)")
@@ -130,23 +125,16 @@ with tabs[2]:
         ci = st.number_input("C/I 值", 0.1)
         isf = st.number_input("ISF 值", 0.1)
         actual_glucose = st.number_input("實際血糖值（餐後）", min_value=0)
-    
+
     suggest_ci_val = ""
-    # === 準備要寫入的新資料列 ===
-    new_data = [
-        str(date), meal, str(total_carb), str(current), str(target), str(actual_glucose),
-        str(ci), str(isf), str(insulin_carb), str(insulin_corr), str(total), str(suggest_ci_val)
-    ]
 
     if st.button("🧮 計算與儲存"):
         total_carb = round(sum([r["carb"] for r in st.session_state.calc_results]), 2)
         insulin_carb = round(total_carb / ci, 1)
         insulin_corr = round((current - target) / isf, 1)
         total = round(insulin_carb + insulin_corr, 1)
-
         st.success(f"碳水：{insulin_carb}U，矯正：{insulin_corr}U，總量：{total}U")
 
-        # 計算建議 C/I 值
         if actual_glucose > 0:
             try:
                 insulin_for_carb = total - ((actual_glucose - target) / isf)
@@ -154,87 +142,42 @@ with tabs[2]:
                     suggest_ci_val = round(total_carb / insulin_for_carb, 2)
                     st.info(f"🔍 建議 C/I 值：{suggest_ci_val}")
                 else:
-                    st.warning("⚠️ 計算結果異常，請檢查 ISF 與總胰島素量")
+                    st.warning("⚠️ 計算異常，請確認數值")
             except ZeroDivisionError:
-                st.warning("⚠️ ISF 值為 0，無法計算建議 C/I 值")
+                st.warning("⚠️ ISF 為 0，無法計算")
 
         for item in st.session_state.calc_results:
             sheet_food_records.append_row([
                 str(date), meal, item["name"], item["amount"], item["unit"], item["carb"]
             ])
 
-        # === 準備要寫入的新資料列 ===
         new_data = [
             str(date), meal, str(total_carb), str(current), str(target), str(actual_glucose),
             str(ci), str(isf), str(insulin_carb), str(insulin_corr), str(total), str(suggest_ci_val)
         ]
-
-        # === 抓出欄位名稱與所有資料 ===
         records = sheet_insulin.get_all_values()
         headers = records[0]
         data_rows = records[1:]
         updated = False
 
-        for idx, row in enumerate(data_rows, start=2):  # 從第2列開始
+        for idx, row in enumerate(data_rows, start=2):
             if row[0] == str(date) and row[1] == meal:
-                # 找到要更新的列，逐格比對
                 updated_row = []
                 for i in range(len(headers)):
-                    if i < len(new_data) and new_data[i] not in [None, "", "0", "0.0"]:  # 有填值才更新
+                    if new_data[i] not in [None, "", "0", "0.0"]:
                         updated_row.append(new_data[i])
                     else:
                         updated_row.append(row[i] if i < len(row) else "")
-
-                if len(updated_row) == len(headers):
-                    try:
-                        sheet_insulin.update(f"A{idx}:L{idx}", [updated_row])
-                        st.success(f"✅ 更新成功：{str(date)} {meal}")
-                    except Exception as e:
-                        st.error("❌ 更新失敗")
-                        st.exception(e)
-                else:
-                    st.warning(f"⚠️ 欄位數不一致：headers={len(headers)} vs updated_row={len(updated_row)}")
-
+                sheet_insulin.update(f"A{idx}:L{idx}", [updated_row])
+                st.success(f"✅ 更新成功：{str(date)} {meal}")
                 updated = True
                 break
 
         if not updated:
-            try:
-                sheet_insulin.append_row(new_data)
-                st.success(f"✅ 新增成功：{str(date)} {meal}")
-            except Exception as e:
-                st.error("❌ 寫入新資料失敗")
-                st.exception(e)
-
-            
-            
-            # === 抓出欄位名稱與所有資料 ===
-            records = sheet_insulin.get_all_values()
-            headers = records[0]
-            data_rows = records[1:]
-            updated = False
-            
-            for idx, row in enumerate(data_rows, start=2):  # 從第2列開始
-                if row[0] == str(date) and row[1] == meal:
-                    # 找到要更新的列，逐格比對
-                    updated_row = []
-                    for i in range(len(headers)):
-                        if new_data[i] not in [None, "", "0", "0.0"]:  # 有填值才更新
-                            updated_row.append(new_data[i])
-                        else:
-                            updated_row.append(row[i] if i < len(row) else "")  # 沿用舊資料
-                    sheet_insulin.update(f"A{idx}:L{idx}", [updated_row])
-                    st.success(f"✅ 更新成功：{str(date)} {meal}")
-                    updated = True
-                    break
-            
-            if not updated:
-                sheet_insulin.append_row(new_data)
-                st.success(f"✅ 新增成功：{str(date)} {meal}")
-        ])
+            sheet_insulin.append_row(new_data)
+            st.success(f"✅ 新增成功：{str(date)} {meal}")
 
         st.session_state.calc_results.clear()
-        st.success("✅ 已儲存至 Google Sheets")
 
     if st.button("📥 載入最近建議 C/I 值"):
         records = sheet_insulin.get_all_records()
@@ -243,4 +186,4 @@ with tabs[2]:
             last = matched[-1]
             st.success(f"載入成功：建議 C/I 值為 {last.get('建議CI值')}")
         else:
-            st.info("查無相同餐別建議 C/I 值")
+            st.info("查無資料")
