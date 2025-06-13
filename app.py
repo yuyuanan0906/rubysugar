@@ -158,8 +158,35 @@ with tabs[2]:
                 str(date), meal, item["name"], item["amount"], item["unit"], item["carb"]
             ])
         sheet_insulin.append_row([
-            str(date), meal, total_carb, current, target, actual_glucose,
-            ci, isf, insulin_carb, insulin_corr, total, suggest_ci_val
+            # === 準備要寫入的新資料列 ===
+            new_data = [
+                str(date), meal, str(total_carb), str(current), str(target), str(actual_glucose),
+                str(ci), str(isf), str(insulin_carb), str(insulin_corr), str(total), str(suggest_ci_val)
+            ]
+            
+            # === 抓出欄位名稱與所有資料 ===
+            records = sheet_insulin.get_all_values()
+            headers = records[0]
+            data_rows = records[1:]
+            updated = False
+            
+            for idx, row in enumerate(data_rows, start=2):  # 從第2列開始
+                if row[0] == str(date) and row[1] == meal:
+                    # 找到要更新的列，逐格比對
+                    updated_row = []
+                    for i in range(len(headers)):
+                        if new_data[i] not in [None, "", "0", "0.0"]:  # 有填值才更新
+                            updated_row.append(new_data[i])
+                        else:
+                            updated_row.append(row[i] if i < len(row) else "")  # 沿用舊資料
+                    sheet_insulin.update(f"A{idx}:L{idx}", [updated_row])
+                    st.success(f"✅ 更新成功：{str(date)} {meal}")
+                    updated = True
+                    break
+            
+            if not updated:
+                sheet_insulin.append_row(new_data)
+                st.success(f"✅ 新增成功：{str(date)} {meal}")
         ])
 
         st.session_state.calc_results.clear()
