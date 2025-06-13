@@ -24,9 +24,6 @@ FOOD_SHEET_ID = "1vIL-n9ARfJy7GkBc7EWC3XDizgJU6e3BYes7N6AJWU0"
 RECORD_SHEET_ID = "1vD-vEszbCPVeVKjKEd0VGBvLak4a12gbiowNvnB0Ik8"
 
 # === 連接 Google Sheets ===
-
-sheet = gc.open_by_key(FOOD_SHEET_ID)
-st.write("可用工作表名稱：", [ws.title for ws in sheet.worksheets()])
 try:
     sheet_food = gc.open_by_key(FOOD_SHEET_ID).worksheet("食物資料")
     st.success("✅ 已連接食物資料")
@@ -36,7 +33,7 @@ except Exception as e:
     st.stop()
 
 try:
-    sheet_food_records = gc.open_by_key(RECORD_SHEET_ID).worksheet("食物紀錄")
+    sheet_food_records = gc.open_by_key(RECORD_SHEET_ID).worksheet("食物記錄")
     sheet_insulin = gc.open_by_key(RECORD_SHEET_ID).worksheet("血糖與胰島素紀錄")
     st.success("✅ 已連接紀錄表格")
 except Exception as e:
@@ -123,6 +120,9 @@ with tabs[2]:
     with col2:
         ci = st.number_input("C/I 值", 0.1)
         isf = st.number_input("ISF 值", 0.1)
+        actual_glucose = st.number_input("實際血糖值（餐後）", min_value=0)
+    
+    suggest_ci_val = ""
 
     if st.button("🧮 計算與儲存"):
         total_carb = round(sum([r["carb"] for r in st.session_state.calc_results]), 2)
@@ -132,13 +132,31 @@ with tabs[2]:
 
         st.success(f"碳水：{insulin_carb}U，矯正：{insulin_corr}U，總量：{total}U")
 
+        # 計算建議 C/I 值
+        if actual_glucose > 0:
+            try:
+                suggest_ci_val = round(total_carb / (total - ((actual_glucose - target) / isf)), 2)
+                st.info(f"🔍 建議 C/I 值：{suggest_ci_val}")
+            except ZeroDivisionError:
+                st.warning("⚠️ ISF 值為 0，無法計算建議 C/I 值")
+
         for item in st.session_state.calc_results:
             sheet_food_records.append_row([
                 str(date), meal, item["name"], item["amount"], item["unit"], item["carb"]
             ])
         sheet_insulin.append_row([
-            str(date), meal, total_carb, current, target, ci, isf, insulin_carb, insulin_corr, total
+            str(date), meal, total_carb, current, target, actual_glucose,
+            ci, isf, insulin_carb, insulin_corr, total, suggest_ci_val
         ])
 
         st.session_state.calc_results.clear()
         st.success("✅ 已儲存至 Google Sheets")
+
+    if st.button("📥 載入最近建議 C/I 值"):
+        records = sheet_insulin.get_all_records()
+        matched = [r for r in records if r["餐別"] == meal and r.get("建議CI值")]
+        if matched:
+            last = matched[-1]
+            st.success(f"載入成功：建議 C/I 值為 {last.get('建議CI值')}")
+        else:
+            st.info("查無相同餐別建議 C/I 值")
