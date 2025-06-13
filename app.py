@@ -132,6 +132,11 @@ with tabs[2]:
         actual_glucose = st.number_input("實際血糖值（餐後）", min_value=0)
     
     suggest_ci_val = ""
+    # === 準備要寫入的新資料列 ===
+    new_data = [
+        str(date), meal, str(total_carb), str(current), str(target), str(actual_glucose),
+        str(ci), str(isf), str(insulin_carb), str(insulin_corr), str(total), str(suggest_ci_val)
+    ]
 
     if st.button("🧮 計算與儲存"):
         total_carb = round(sum([r["carb"] for r in st.session_state.calc_results]), 2)
@@ -158,11 +163,7 @@ with tabs[2]:
                 str(date), meal, item["name"], item["amount"], item["unit"], item["carb"]
             ])
         sheet_insulin.append_row([
-            # === 準備要寫入的新資料列 ===
-            new_data = [
-                str(date), meal, str(total_carb), str(current), str(target), str(actual_glucose),
-                str(ci), str(isf), str(insulin_carb), str(insulin_corr), str(total), str(suggest_ci_val)
-            ]
+            
             
             # === 抓出欄位名稱與所有資料 ===
             records = sheet_insulin.get_all_values()
